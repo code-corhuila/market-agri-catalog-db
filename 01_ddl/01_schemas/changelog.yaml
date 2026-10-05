@@ -1,1 +1,18 @@
-databaseChangeLog: []
+databaseChangeLog:
+  - changeSet:
+      id: ddl-schemas-001
+      author: contreras-elkin
+      labels: "HU-PLAT-004,ddl,schemas"
+      comment: "Create the catalog schema. Nothing of this domain lives in public."
+      changes:
+        - sqlFile:
+            path: 001_create_schema_catalog.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+            stripComments: false
+      rollback:
+        - sqlFile:
+            path: ../../05_rollbacks/01_ddl/01_schemas/001_create_schema_catalog.rollback.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+            stripComments: false
