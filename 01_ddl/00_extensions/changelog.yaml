@@ -1,0 +1,4 @@
+# Extensions are created by the infrastructure (Anexo J.4): market-agri-infra
+# runs CREATE EXTENSION in postgres/init/01-instance.sh. The folder is kept so
+# the numbering of 01_ddl does not change.
+databaseChangeLog: []
