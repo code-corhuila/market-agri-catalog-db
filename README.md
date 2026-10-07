@@ -36,6 +36,11 @@ deploy/compose.yml     only the catalog-db-migrate runner (valid when market-agr
    Changeset id: `<family>-<folder>-NNN`, never reused. `labels`: `"<SUBTASK-ID>,<family>,<folder>"`.
 6. Seeds are idempotent (`INSERT … ON CONFLICT … DO UPDATE`).
 7. Incompatible changes go in two releases (expand, then contract).
+8. **Least privilege for the app user.** `catalog_app` only gets `catalog_writer`
+   (`SELECT, INSERT, UPDATE` on `catalog`). There is **no `DELETE` on purpose**: catalog uses
+   soft delete (`deleted_at`). When a use case needs physical delete (e.g. removing a
+   `product_photo`), it is granted **per table, in its own `03_dcl` changeset**.
+   `02_dml/02_deletes` is for data migrations run by the administrator, not for the app.
 
 ## Run it (always from `market-agri-infra`)
 
