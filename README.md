@@ -38,9 +38,56 @@ deploy/compose.yml     only the catalog-db-migrate runner (valid when market-agr
 7. Incompatible changes go in two releases (expand, then contract).
 8. **Least privilege for the app user.** `catalog_app` only gets `catalog_writer`
    (`SELECT, INSERT, UPDATE` on `catalog`). There is **no `DELETE` on purpose**: catalog uses
-   soft delete (`deleted_at`). When a use case needs physical delete (e.g. removing a
-   `product_photo`), it is granted **per table, in its own `03_dcl` changeset**.
-   `02_dml/02_deletes` is for data migrations run by the administrator, not for the app.
+   soft delete (`deleted_at`), reservations are released with `released_at`, and the photo is
+   a column (D-C8). When a use case needs physical delete, it is granted **per table, in its
+   own `03_dcl` changeset**. Today no table needs it; purging old `idempotency_key` rows is
+   declared technical debt. `02_dml/02_deletes` is for data migrations run by the
+   administrator, not for the app.
+
+## Data dictionary
+
+Contract: `07-api/api-contract.md` §4.2 in `market-agri-docs`. Every table lives in `catalog`.
+
+### `product` — what a producer offers
+
+| Column | Type | Null | Meaning and rules |
+|---|---|---|---|
+| `id` | `uuid` | no | Primary key, `gen_random_uuid()` |
+| `producer_id` | `uuid` | no | Owner (JWT `sub`). Lives in auth: an id, **no foreign key** |
+| `producer_name` | `text` | no | Snapshot of the JWT `name` at creation (D-C31), 1–150 after trim |
+| `name` | `text` | no | 1–150 after trim |
+| `category` | `text` | no | One of the 10 `ProductCategory` codes (D-C6) |
+| `unit` | `text` | no | One of the 10 `ProductUnit` codes (D-C6) |
+| `quantity` | `numeric(12,2)` | no | Available now, `>= 0`, already net of reservations (D-C7, D-C12). The type **rounds** a third decimal: the API rejects it first (`400`) |
+| `price_cents` | `bigint` | no | Price per `unit` in centavos (ADR-012), 1 … 999 999 999 999. Currency is always COP: no column |
+| `municipality` | `text` | no | As typed, 1–100 after trim |
+| `municipality_key` | `text` | no | `municipality` in lower case without accents, written by the API; E-10 filters on it |
+| `photo_url` | `text` | yes | `/media/{key}` or `NULL`, never `''` (D-C8) |
+| `status` | `text` | no | `ACTIVE` or `OUT_OF_STOCK`. `ACTIVE` requires `quantity > 0` |
+| `created_at`, `updated_at` | `timestamptz` | no | `updated_at` is set by the API on every change |
+| `deleted_at` | `timestamptz` | yes | `NULL` = alive. A date = deleted, terminal and invisible to the API (D-C5) |
+
+### `stock_reservation` — stock held by a pending payment
+
+| Column | Type | Null | Meaning and rules |
+|---|---|---|---|
+| `transaction_id` | `uuid` | no | Primary key, sent by transactions: the idempotency key of I-03 |
+| `product_id` | `uuid` | no | `fk_stock_reservation_product`, `ON DELETE RESTRICT` |
+| `producer_id`, `product_name`, `unit` | — | no | Snapshots taken at reservation time |
+| `quantity` | `numeric(12,2)` | no | Reserved, `> 0` |
+| `unit_price_cents` | `bigint` | no | Price at reservation time; transactions computes the amount from it (D-C11) |
+| `remaining_quantity` | `numeric(12,2)` | no | Product quantity right after the reservation, so a retry answers the same body |
+| `created_at` | `timestamptz` | no | |
+| `released_at` | `timestamptz` | yes | `NULL` = holding. A date = given back once (I-04 or `TransactionFailed`) |
+
+### `idempotency_key` — the key each product was created with (D-C35)
+
+| Column | Type | Null | Meaning and rules |
+|---|---|---|---|
+| `owner_id` | `uuid` | no | JWT `sub`. Primary key with `key_value` |
+| `key_value` | `text` | no | The `Idempotency-Key` header, 8–128 characters |
+| `product_id` | `uuid` | no | `fk_idempotency_key_product`, `ON DELETE RESTRICT` |
+| `created_at` | `timestamptz` | no | For a future purge (technical debt) |
 
 ## Run it (always from `market-agri-infra`)
 
