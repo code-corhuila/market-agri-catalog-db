@@ -1,1 +1,52 @@
-databaseChangeLog: []
+databaseChangeLog:
+  - changeSet:
+      id: ddl-tables-001
+      author: contreras-elkin
+      labels: "HU-PLAT-004,ddl,tables"
+      comment: "product - what a producer offers. Soft delete with deleted_at (D-C5). No foreign keys here, they go in 04_alter."
+      changes:
+        - sqlFile:
+            path: 001_create_product.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+            stripComments: false
+      rollback:
+        - sqlFile:
+            path: ../../05_rollbacks/01_ddl/03_tables/001_create_product.rollback.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+            stripComments: false
+  - changeSet:
+      id: ddl-tables-002
+      author: contreras-elkin
+      labels: "HU-PLAT-004,ddl,tables"
+      comment: "stock_reservation - stock held by a pending payment (I-03), released at most once (I-04)."
+      changes:
+        - sqlFile:
+            path: 002_create_stock_reservation.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+            stripComments: false
+      rollback:
+        - sqlFile:
+            path: ../../05_rollbacks/01_ddl/03_tables/002_create_stock_reservation.rollback.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+            stripComments: false
+  - changeSet:
+      id: ddl-tables-003
+      author: contreras-elkin
+      labels: "HU-PLAT-004,ddl,tables"
+      comment: "idempotency_key - the key each product was created with (D-C35)."
+      changes:
+        - sqlFile:
+            path: 003_create_idempotency_key.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+            stripComments: false
+      rollback:
+        - sqlFile:
+            path: ../../05_rollbacks/01_ddl/03_tables/003_create_idempotency_key.rollback.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+            stripComments: false
