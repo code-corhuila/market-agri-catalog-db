@@ -29,8 +29,10 @@ CREATE TABLE catalog.product (
     CONSTRAINT chk_product_quantity_non_negative   CHECK (quantity >= 0),
     CONSTRAINT chk_product_price_cents_range       CHECK (price_cents BETWEEN 1 AND 999999999999),
     CONSTRAINT chk_product_municipality_length     CHECK (char_length(btrim(municipality)) BETWEEN 1 AND 100),
+    -- D-16: the database cannot strip accents without unaccent, but it can refuse any key that
+    -- still has them: only a-z and 0-9 words, one separator (space . ' -) between words.
     CONSTRAINT chk_product_municipality_key        CHECK (char_length(municipality_key) BETWEEN 1 AND 100
-                                                          AND municipality_key = lower(municipality_key)),
+                                                          AND municipality_key ~ '^[a-z0-9]+([ .''-][a-z0-9]+)*$'),
     CONSTRAINT chk_product_photo_url               CHECK (photo_url ~ '^/media/.+'),
     CONSTRAINT chk_product_status                  CHECK (status IN ('ACTIVE', 'OUT_OF_STOCK')),
     -- E-15 (ACTIVE_REQUIRES_STOCK) and D-C12: ACTIVE always has stock; OUT_OF_STOCK may have some again

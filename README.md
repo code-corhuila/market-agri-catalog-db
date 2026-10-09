@@ -61,7 +61,7 @@ Contract: `07-api/api-contract.md` §4.2 in `market-agri-docs`. Every table live
 | `quantity` | `numeric(12,2)` | no | Available now, `>= 0`, already net of reservations (D-C7, D-C12). The type **rounds** a third decimal: the API rejects it first (`400`) |
 | `price_cents` | `bigint` | no | Price per `unit` in centavos (ADR-012), 1 … 999 999 999 999. Currency is always COP: no column |
 | `municipality` | `text` | no | As typed, 1–100 after trim |
-| `municipality_key` | `text` | no | `municipality` in lower case without accents, written by the API; E-10 filters on it |
+| `municipality_key` | `text` | no | `municipality` in lower case without accents, written by the API; E-10 filters on it. The `CHECK` only accepts `a-z`/`0-9` words with one separator (space `.` `'` `-`), so a key that still has accents, capitals or double spaces is refused |
 | `photo_url` | `text` | yes | `/media/{key}` or `NULL`, never `''` (D-C8) |
 | `status` | `text` | no | `ACTIVE` or `OUT_OF_STOCK`. `ACTIVE` requires `quantity > 0` |
 | `created_at`, `updated_at` | `timestamptz` | no | `updated_at` is set by the API on every change |
