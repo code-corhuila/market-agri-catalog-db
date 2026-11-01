@@ -2,7 +2,8 @@ name: Database rebuild
 
 # The whole changelog must build the catalog schema from an EMPTY instance, apply
 # nothing on a second run, give catalog_app write access only to its own schema
-# (Anexo J.10), revert entirely and build again (norm §5.2.8, ADR-011).
+# (Anexo J.10), keep the table rules of tests/*.sql, revert entirely and build again
+# (norm §5.2.8, ADR-011).
 
 on:
   pull_request:
@@ -77,6 +78,10 @@ jobs:
           if grep -E '^catalog_app\|' privileges.txt | grep -vE '^catalog_app\|catalog\|' | grep -q '|t$'; then
             echo "catalog_app can write outside the catalog schema"; exit 1
           fi
+          echo "::endgroup::"
+
+          echo "::group::3b. table rules (tests/*.sql), on the built schema"
+          for t in tests/*.sql; do echo "-- $t"; psql < "$t"; done
           echo "::endgroup::"
 
           echo "::group::4. full rollback leaves nothing of the domain"

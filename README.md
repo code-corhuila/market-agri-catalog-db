@@ -21,7 +21,8 @@ changelog/changelog-master.yaml   single entry point: Liquibase runs only what i
 04_tcl/    control    transaction blocks, manual recoveries, release tags
 05_rollbacks/          mirror: one .rollback.sql for every .sql (no changelogs here)
 deploy/compose.yml     only the catalog-db-migrate runner (valid when market-agri-infra includes it)
-.github/workflows/     db-ci.yml: rebuild from empty, J.10 isolation query, full rollback, rebuild
+tests/                 SQL checks of the table rules, run by db-ci on the built schema (rolled back)
+.github/workflows/     db-ci.yml: rebuild from empty, J.10 isolation query, tests/*.sql, full rollback, rebuild
 ```
 
 ## Rules
@@ -63,7 +64,7 @@ Contract: `07-api/api-contract.md` §4.2 in `market-agri-docs`. Every table live
 | `municipality` | `text` | no | As typed, 1–100 after trim |
 | `municipality_key` | `text` | no | `municipality` in lower case without accents, written by the API; E-10 filters on it. The `CHECK` only accepts `a-z`/`0-9` words with one separator (space `.` `'` `-`), so a key that still has accents, capitals or double spaces is refused |
 | `photo_url` | `text` | yes | `/media/{key}` or `NULL`, never `''` (D-C8) |
-| `status` | `text` | no | `ACTIVE` or `OUT_OF_STOCK`. `ACTIVE` requires `quantity > 0` |
+| `status` | `text` | no | Derived from `quantity` (FR-013, INV-009): `quantity > 0` ⇒ `ACTIVE` (`chk_product_active_has_stock`), `quantity = 0` ⇒ `OUT_OF_STOCK` (`chk_product_out_of_stock_has_no_stock`). The API writes both in the same `UPDATE` |
 | `created_at`, `updated_at` | `timestamptz` | no | `updated_at` is set by the API on every change |
 | `deleted_at` | `timestamptz` | yes | `NULL` = alive. A date = deleted, terminal and invisible to the API (D-C5) |
 
