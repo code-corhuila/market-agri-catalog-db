@@ -1,1 +1,19 @@
-databaseChangeLog: []
+databaseChangeLog:
+  - changeSet:
+      id: dml-inserts-001
+      author: contreras-elkin
+      labels: "HU-CAT-005,dml,inserts"
+      contextFilter: "dev,qa"
+      comment: "product - 21 demo products for dev and qa only (D-20): the runner passes --contexts=ENV, so main starts empty."
+      changes:
+        - sqlFile:
+            path: 001_seed_products.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+            stripComments: false
+      rollback:
+        - sqlFile:
+            path: ../../05_rollbacks/02_dml/00_inserts/001_seed_products.rollback.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+            stripComments: false
