@@ -16,3 +16,26 @@ databaseChangeLog:
             relativeToChangelogFile: true
             splitStatements: false
             stripComments: false
+  - changeSet:
+      id: ddl-alter-002
+      author: contreras-elkin
+      labels: "HU-CAT-004,ddl,alter"
+      comment: "product: OUT_OF_STOCK only with quantity 0, so the status always follows the quantity (FR-013, INV-009)."
+      preConditions:
+        - onFail: HALT
+        - onFailMessage: "catalog.product has OUT_OF_STOCK rows with stock: set their status to ACTIVE before migrating."
+        - sqlCheck:
+            expectedResult: 0
+            sql: SELECT count(*) FROM catalog.product WHERE status = 'OUT_OF_STOCK' AND quantity > 0
+      changes:
+        - sqlFile:
+            path: 002_add_check_product_out_of_stock_has_no_stock.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+            stripComments: false
+      rollback:
+        - sqlFile:
+            path: ../../05_rollbacks/01_ddl/04_alter/002_add_check_product_out_of_stock_has_no_stock.rollback.sql
+            relativeToChangelogFile: true
+            splitStatements: false
+            stripComments: false
