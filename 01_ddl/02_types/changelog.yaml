@@ -1,0 +1,4 @@
+# Deliberately empty. Closed sets of values are modelled as a CHECK, never as an
+# ENUM type: adding a value to an enum cannot be done in the same transaction
+# that uses it.
+databaseChangeLog: []
