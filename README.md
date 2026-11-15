@@ -36,6 +36,10 @@ tests/                 SQL checks of the table rules, run by db-ci on the built 
 5. An applied changeset is **never edited**; a correction is a new changeset.
    Changeset id: `<family>-<folder>-NNN`, never reused. `labels`: `"<SUBTASK-ID>,<family>,<folder>"`.
 6. Seeds are idempotent (`INSERT … ON CONFLICT … DO UPDATE`).
+   **Demo seeds run only in dev and qa** (`contextFilter: "dev,qa"`): the runner passes
+   `--contexts=${ENV}`, so `main` starts with an empty catalog. `02_dml/00_inserts` holds 21
+   products owned by the seed producers of auth-db (same UUIDs). Their rollback fails on purpose
+   once a seed product has reservations: used demo data is not rolled back.
 7. Incompatible changes go in two releases (expand, then contract).
 8. **Least privilege for the app user.** `catalog_app` only gets `catalog_writer`
    (`SELECT, INSERT, UPDATE` on `catalog`). There is **no `DELETE` on purpose**: catalog uses
