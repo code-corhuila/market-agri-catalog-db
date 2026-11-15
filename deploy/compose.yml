@@ -1,6 +1,8 @@
 # Only the migration runner of the catalog schema. The PostgreSQL instance, its
 # volume and the catalog_app user live in market-agri-infra (Anexo J.1, J.7):
 # this file is valid only when market-agri-infra includes it (decision D-11).
+# ENV (dev | qa | main) is also the Liquibase context: changesets with contextFilter
+# "dev,qa" (demo seeds) are skipped in main; changesets without one always run.
 #
 # From market-agri-infra:
 #   docker compose --env-file env/dev.env run --rm catalog-db-migrate
@@ -24,7 +26,8 @@ services:
       "--username=${PG_ADMIN_USER:?set PG_ADMIN_USER}",
       "--password=${PG_ADMIN_PASSWORD:?set PG_ADMIN_PASSWORD}",
       "--database-changelog-table-name=databasechangelog_catalog",
-      "--database-changelog-lock-table-name=databasechangeloglock_catalog"]
+      "--database-changelog-lock-table-name=databasechangeloglock_catalog",
+      "--contexts=${ENV:?set ENV}"]       # demo seeds run only in dev and qa (D-20)
     command: ["update"]
     networks: [platform]
 
